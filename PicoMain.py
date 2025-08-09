@@ -156,13 +156,13 @@ def find_encode_align():
     if main_aligned_first:
         # move right some distance, then find left limit location
         set_servo_dir(0)
-        set_servo_running(main_servo_rev * 0.2)
-        time.sleep(3)
+        set_servo_running(main_servo_rev * 0.5)
+        time.sleep(2)
         set_servo_stop()
         
         # move left until find left limit
         set_servo_dir(1)
-        set_servo_running(main_servo_rev * 4)
+        set_servo_running(main_servo_rev * 3)
         left_limit = 0
         while True:
             if left_limit == 1:
@@ -175,7 +175,7 @@ def find_encode_align():
         
         # move right until fine right limit
         set_servo_dir(0)
-        set_servo_running(main_servo_rev * 4)
+        set_servo_running(main_servo_rev * 3)
         right_limit = 0
         while True:
             if right_limit == 1:
@@ -288,22 +288,31 @@ def goto_location_with_cascade_pid(location):
     # loop until goto somewhere
     now_pwm = main_servo_rev
     while True:
-        new_pwm = cascade_pid_calc(encode_value, dst_value, now_pwm)
-        now_pwm = new_pwm
-        if new_pwm > 0:
-            set_servo_dir(0)
-        else:
+        differ_pwm = cascade_pid_calc(encode_value, dst_value, now_pwm)
+        now_pwm += differ_pwm
+        
+        if now_pwm > 0:
             set_servo_dir(1)
-        new_pwm = abs(new_pwm)
-        set_servo_running(new_pwm)
+        else:
+            set_servo_dir(0)
+        #now_pwm = int(abs(now_pwm))
+        #if abs(now_pwm) < 800:
+        #    now_pwm = 800
+        if int(abs(now_pwm)) < 200:
+            set_servo_running(200)
+        else:
+            set_servo_running(int(abs(now_pwm)))
             
         time.sleep(0.1)
         differ = dst_value - encode_value
-        print(pid_i["output"], pid_o["output"], differ)
-        if abs(differ) < 300 or abs(now_pwm) < 20:  # 300 / 2400 * 0.8 = 0.1 mm
+        differ_mm = differ / main_encode_number * main_circle_distance
+        print(pid_i["output"], pid_o["output"], now_pwm, differ, differ_mm)
+        #print(now_pwm, differ, differ_mm)
+        if abs(differ) < 300:  # 300 / 2400 * 0.8 = 0.1 mm
             break
     
-    set_servo_stop()    
+    set_servo_stop()
+    cascade_pid_clear()
     
 
 """
@@ -315,8 +324,8 @@ About Cascade Pid:
     out: encode distance
     in: pwm 
 """
-value_i = [1.0, 0.0, 0.0, 0.0, main_servo_rev_max // 5]
-value_o = [1.0, 0.0, 3.0, 0.0, 200.0]
+value_i = [1.0, 0.0, 0.0, 0.0, 1600.0]
+value_o = [1.0, 0.0, 3.0, 0.0, 4800.0]
 cascade_pid_init(value_i, value_o)
 first = True
 while True:
@@ -328,9 +337,19 @@ while True:
     
     # test cascade pid
     if first:
-        goto_location_with_cascade_pid(main_phycial_distance / 2)
+        location1 = main_phycial_distance / 4 # 4.25
+        location2 = main_phycial_distance / 2 # 9.5
+        location3 = location1 + 2.0 # 6.25
+        location4 = main_phycial_distance / 4 * 3 # 14.1
+        goto_location_with_cascade_pid(location1)
+        time.sleep(1)
+        goto_location_with_cascade_pid(location2)
+        time.sleep(1)
+        goto_location_with_cascade_pid(location3)
+        time.sleep(1)
+        goto_location_with_cascade_pid(location4)
+        time.sleep(1)
         first = False
     
     # loop
-    #print(encode_value)
     time.sleep(1)
