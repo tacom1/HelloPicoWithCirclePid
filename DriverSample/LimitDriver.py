@@ -29,6 +29,6 @@ def read_limit(pin, is_left):
 left_pin.irq(lambda pin: read_limit(pin, True))
 right_pin.irq(lambda pin: read_limit(pin, False))
 
-#while True:
-#    time.sleep(0.1)
+while True:
+    time.sleep(0.1)
     

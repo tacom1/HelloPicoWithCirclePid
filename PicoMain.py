@@ -39,7 +39,7 @@ right_limit = 0
 ### main
 main_servo_rev = 1600  # 1600 / circle
 main_encode_number = 2400  # 2400 high/low | circle (encode)
-main_servo_rev_max = int(600 / 60 * main_servo_rev / 2)  # max 600 circle / minute, / 2 is for safe
+main_servo_rev_max = int(600 / 60 * main_servo_rev - 5)  # max 600 circle / minute, -3 is for safe
 main_circle_distance = 0.8 # 0.8mm / circle
 main_aligned_first = True
 main_left_encode_number = 0
@@ -162,7 +162,7 @@ def find_encode_align():
         
         # move left until find left limit
         set_servo_dir(1)
-        set_servo_running(main_servo_rev * 3)
+        set_servo_running(main_servo_rev * 4)
         left_limit = 0
         while True:
             if left_limit == 1:
@@ -175,7 +175,7 @@ def find_encode_align():
         
         # move right until fine right limit
         set_servo_dir(0)
-        set_servo_running(main_servo_rev * 3)
+        set_servo_running(main_servo_rev * 4)
         right_limit = 0
         while True:
             if right_limit == 1:
@@ -303,9 +303,10 @@ def goto_location_with_cascade_pid(location):
         else:
             set_servo_running(int(abs(now_pwm)))
             
-        time.sleep(0.1)
+        time.sleep(0.02)  # speed higher, time lower
         differ = dst_value - encode_value
         differ_mm = differ / main_encode_number * main_circle_distance
+        # Debug
         print(pid_i["output"], pid_o["output"], now_pwm, differ, differ_mm)
         #print(now_pwm, differ, differ_mm)
         if abs(differ) < 300:  # 300 / 2400 * 0.8 = 0.1 mm
@@ -324,8 +325,8 @@ About Cascade Pid:
     out: encode distance
     in: pwm 
 """
-value_i = [1.0, 0.0, 0.0, 0.0, 1600.0]
-value_o = [1.0, 0.0, 3.0, 0.0, 4800.0]
+value_i = [1.0, 0.0, 0.0, 0.0, 400.0]
+value_o = [1.0, 0.0, 3.0, 0.0, 6400.0]
 cascade_pid_init(value_i, value_o)
 first = True
 while True:
@@ -337,10 +338,15 @@ while True:
     
     # test cascade pid
     if first:
+        #location1 = main_phycial_distance / 4 # 4.25
+        #location2 = main_phycial_distance / 4 * 2 # 9.5
+        #location3 = main_phycial_distance / 4 * 3 # 14.1
+        #location4 = location1 + 2.0 # 6.25
+        
         location1 = main_phycial_distance / 4 # 4.25
-        location2 = main_phycial_distance / 2 # 9.5
-        location3 = location1 + 2.0 # 6.25
-        location4 = main_phycial_distance / 4 * 3 # 14.1
+        location2 = main_phycial_distance / 4 * 3 # 14.1
+        location3 = main_phycial_distance / 4 
+        location4 = main_phycial_distance / 4 * 3
         goto_location_with_cascade_pid(location1)
         time.sleep(1)
         goto_location_with_cascade_pid(location2)
@@ -352,4 +358,4 @@ while True:
         first = False
     
     # loop
-    time.sleep(1)
+    time.sleep(3)
