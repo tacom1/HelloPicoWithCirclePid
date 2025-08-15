@@ -89,6 +89,7 @@ while True:
         elif bytes(rx_buffer_command) == b'W01':
             if len(rx_buffer_data) == 4:
                 float_distance = float(bytes(rx_buffer_data))
+                uart0.write(bytes([0x01, 0x0A]))
                 print(float_distance)
                 clean_buffer(True, True, False)
         
