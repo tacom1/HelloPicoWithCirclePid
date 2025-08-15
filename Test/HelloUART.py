@@ -12,13 +12,13 @@ only defined commands can be deeled.
 Next command will supports:
 
 Self Define Read Command(3-bytes):
-    1. M00: Connect(Ask is Ok) / ACK
-    2. M01: Read Encode / DATA
-    3. M02: Read Left / DATA
-    4. M03: Read Right / DATA
+    1. R00: Connect(Ask is Ok) / ACK
+    2. R01: Read Encode / DATA
+    3. R02: Read Left / DATA
+    4. R03: Read Right / DATA
 
 Self Define Write Command:
-    1. G01: (3-bytes) | Data(5-bytes)  # G01 18.8
+    1. W01: (3-bytes) | Data(4-bytes)  # W01 18.8
 
 Self Define FallBack:
     -  ACK:  0x01 0x0A(\n)
@@ -29,15 +29,18 @@ Self Define FallBack:
 uart0 = UART(0, baudrate=115200, tx=Pin(0), rx=Pin(1))
 rx_buffer_command = bytearray()
 rx_buffer_data = bytearray()
+temp_byte_buffer = bytearray()
 rx_tim = Timer()
 
-def clean_buffer(clean_command, clean_data):
+def clean_buffer(clean_command, clean_data, clean_temp):
     global rx_buffer_command
     global rx_buffer_data
     if clean_command:
         rx_buffer_command[:] = b''
     if clean_data:
         rx_buffer_data[:] = b''
+    if clean_temp:
+        temp_byte_buffer[:] = b''
 
 def read_uart_freq(timer):
     global uart0
@@ -49,25 +52,46 @@ def read_uart_freq(timer):
         b = uart0.read(1)
         if len(rx_buffer_command) < 3:
             if len(rx_buffer_command) == 0:
-                if b != b'M' and b != b'G':
+                if b != b'R' and b != b'W':
                     return # Dirty Data Drop
             rx_buffer_command.extend(b)
-        elif bytes(rx_buffer_command) == b'G01':
+        elif bytes(rx_buffer_command) == b'W01':
             if len(rx_buffer_data) < 4 and b != b' ':  # blank key
                 rx_buffer_data.extend(b)
-            #else:
-                # else drop, until command be processed
-                # print("Drop", b)
+        # else drop, until command be processed
     
-    ### simulate main loop process data ###
-    if len(rx_buffer_command) == 3:
-        if bytes(rx_buffer_command) == b'M00':
-            uart0.write(bytes([0x01, 0x0A]))
-        
-
 rx_tim.init(freq=20, mode=Timer.PERIODIC, callback=read_uart_freq)
 
 while True:
-    time.sleep(0.1)
+    ### simulate main loop process data ###
+    if len(rx_buffer_command) == 3:
+        if bytes(rx_buffer_command) == b'R00':
+            uart0.write(bytes([0x01, 0x0A]))
+            clean_buffer(True, False, False)
+        elif bytes(rx_buffer_command) == b'R01':
+            temp_byte_buffer.append(0x02)
+            temp_byte_buffer.extend(str(3.14).encode('utf-8'))
+            temp_byte_buffer.append(0x0A)
+            uart0.write(bytes(temp_byte_buffer))
+            clean_buffer(True, False, True)
+        elif bytes(rx_buffer_command) == b'R02':
+            temp_byte_buffer.append(0x02)
+            temp_byte_buffer.extend(str(3.1415).encode('utf-8'))
+            temp_byte_buffer.append(0x0A)
+            uart0.write(bytes(temp_byte_buffer))
+            clean_buffer(True, False, True)
+        elif bytes(rx_buffer_command) == b'R03':
+            temp_byte_buffer.append(0x02)
+            temp_byte_buffer.extend(str(3.222).encode('utf-8'))
+            temp_byte_buffer.append(0x0A)
+            uart0.write(bytes(temp_byte_buffer))
+            clean_buffer(True, False, True)
+        elif bytes(rx_buffer_command) == b'W01':
+            if len(rx_buffer_data) == 4:
+                float_distance = float(bytes(rx_buffer_data))
+                print(float_distance)
+                clean_buffer(True, True, False)
+        
+    time.sleep(0.05)
         
         
