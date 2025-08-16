@@ -2,4 +2,4 @@
 name = "PySide QtQuick Project"
 
 [tool.pyside6-project]
-files = ["main.py", "main.qml"]
+files = ["Components/FluentUI/FluControlBackground.qml", "Components/FluentUI/FluFilledButton.qml", "Components/FluentUI/FluFocusRectangle.qml", "Components/FluentUI/FluIcon.qml", "Components/FluentUI/FluShadow.qml", "Components/FluentUI/FluSlider.qml", "Components/FluentUI/FluText.qml", "Components/FluentUI/FluTooltip.qml", "Components/FluentUI/FluentIcons.ttf", "Components/HelloFilledButton.qml", "Components/HelloMainContainer.qml", "Components/HelloSlider.qml", "main.py", "main.qml"]
