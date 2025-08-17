@@ -1,6 +1,8 @@
 # This file is used to ignore files which are generated
+# pyTools is qt cache, generate from Scripts/HelloSpeedScripts.py and emit in main.py
 # ----------------------------------------------------------------------------
 pyproject.toml.user
+pyTools
 *~
 *.autosave
 *.a

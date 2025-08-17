@@ -19,7 +19,7 @@ Rectangle{
         anchors{
             horizontalCenter: centerControl.horizontalCenter
             bottom: centerControl.top
-            bottomMargin: 16
+            bottomMargin: 8
         }
     }
 }
