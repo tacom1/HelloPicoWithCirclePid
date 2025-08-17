@@ -86,7 +86,7 @@ Window {
             win.close()
         }
         onPositiveClicked: ()=>{
-            win.waitDeviceConnect()
+            win.waitCh343Connect()
         }
     }
     FluInfoBar{
@@ -144,6 +144,7 @@ Window {
             waitingPopup.buttonFlags = 0x00
             waitingPopup.open()
             closeWaitingPopup.start()
+            waitDeviceConnect()
         }else{
             waitingPopup.title = "CH343 Failed Open"
             waitingPopup.buttonFlags = 0x02 | 0x04
@@ -169,7 +170,7 @@ Window {
                 regularReadMachineData.start()
             }
         }else{
-            msg = `Command: ${command} Decode Failed`
+            let msg = `Command: ${command} Decode Failed`
             onHelloSerialError(msg)
         }
     }
@@ -211,7 +212,6 @@ Window {
         pyHelloSerialPort.responseData.connect(onResponseData)
         //winInfoBar.showError("Error Test")
         waitCh343Connect()
-        waitDeviceConnect()
     }
     Component.onDestruction: {
         let result = pyHelloSerialPort.close()

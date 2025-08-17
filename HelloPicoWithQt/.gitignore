@@ -3,6 +3,8 @@
 # ----------------------------------------------------------------------------
 pyproject.toml.user
 pyTools
+main.spec
+dist
 *~
 *.autosave
 *.a
