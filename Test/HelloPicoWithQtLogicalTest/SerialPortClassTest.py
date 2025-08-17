@@ -94,23 +94,38 @@ class HelloSerialPort(QObject):
         self.command_list = [HelloSerialPortConst.COMMAND_W01, HelloSerialPortConst.COMMAND_R03,
                              HelloSerialPortConst.COMMAND_R02, HelloSerialPortConst.COMMAND_R01,
                              HelloSerialPortConst.COMMAND_R00]
-        self.last_command = HelloSerialPortConst.COMMAND_R00
+
         self.now_command = HelloSerialPortConst.COMMAND_R00
         self.now_byte_data = bytearray()
 
+        self.command_queue = []
+        self.command_consume_timer = QTimer(self)
+        self.command_consume_timer.setInterval(200)  # 200ms
+        self.command_consume_timer.timeout.connect(self._consume_command)
+        self.command_consume_timer.start()
+
+
     def send_command(self, command: bytearray):
+        if command[:3] in self.command_list:
+            ms = 200 if command[0] == HelloSerialPortConst.R_BYTE else 500
+            self.command_queue.append([command, ms])
+            return
+        self.handle_error("Command Not in Defined list")
+
+    @Slot()
+    def _consume_command(self):
         def send_byte_data():
             if not self.ch343.write_byte_data(bytes(self.now_command)):
                 self.handle_error("Write Data to port error")
 
-        if command[:3] in self.command_list:
-            self.last_command = self.now_command
-            self.now_command = command
-
-            ms = 200 if self.last_command[0] == HelloSerialPortConst.R_BYTE else 500
-            QTimer.singleShot(ms, send_byte_data)
-            return
-        self.handle_error("Command Not in Defined list")
+        # has command need to be sent in queue
+        if len(self.command_queue) != 0:
+            now_command_instance = self.command_queue[0]
+            now_command_instance[1] -= 200
+            if now_command_instance[1] <= 0:
+                self.now_command = now_command_instance[0]
+                self.command_queue.pop(0)
+                send_byte_data()
 
     def receive_callback(self, data: bytearray):
         self.now_byte_data = data
@@ -153,6 +168,7 @@ if __name__ == '__main__':
 
     p = HelloSerialPort(app)
     if not p.open("USB-Enhanced-SERIAL CH343"):
+        print("无法打开串口通信设备")
         p.close()
         sys.exit(-1)
 
