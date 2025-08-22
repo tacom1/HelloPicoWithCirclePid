@@ -8,8 +8,8 @@
 #include <QGuiApplication>
 #include "qqmlextensionplugin.h"
 
-Q_IMPORT_QML_PLUGIN(HelloPicoWithQtDesignTestContentPlugin)
 Q_IMPORT_QML_PLUGIN(HelloPicoWithQtDesignTestPlugin)
+Q_IMPORT_QML_PLUGIN(HelloPicoWithQtDesignTestContentPlugin)
 
 const char mainQmlFile[] = "qrc:/qt/qml/HelloPicoWithQtDesignTestContent/App.qml";
 
